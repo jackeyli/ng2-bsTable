@@ -4,7 +4,9 @@
 import { Pipe,Component, Directive, ElementRef, Renderer, EventEmitter, DynamicComponentLoader, Host, ViewEncapsulation, Type, ComponentRef, KeyValueDiffer, KeyValueDiffers, OnInit, OnDestroy, DoCheck, ViewContainerRef, Output } from "angular2/core";
 import {ng_bsTableItem} from "/jslib/ng-bstableItem.ts";
 import {bsTablePageEvent} from "/jslib/ng-bstableEvt.ts";
-import {ngBsTablePaging} from '/jslib/ng-bstablePaging.ts'
+import {ngBsTablePaging} from '/jslib/ng-bstablePaging.ts';
+import {ng2Editable} from '/jslib/ng-editable.ts';
+import {defaultEditComponent} from '/jslib/ng-editComponent.ts';
 @Pipe({
         name:"paging",
         pure : false
@@ -41,7 +43,7 @@ class sortFilter{
 @Component({
     selector : "ng_bstable",
     inputs : ["option:option","data:data"],
-    directives:[ng_bsTableItem,ngBsTablePaging],
+    directives:[ng_bsTableItem,ngBsTablePaging,ng2Editable],
     pipes:[pageFilter,sortFilter],
     template:`
         <div class="bootstrap-table">
@@ -61,8 +63,8 @@ class sortFilter{
                                 <td *ngIf="option.detailView">
                                     <a class="detail-icon" href="javascript:"><i class="glyphicon glyphicon-plus icon-plus"></i></a>
                                 </td>
-                                <td *ngFor = "#column of option.columns">
-                                    <ngBsTableItem (onClick) = "cellClick($event)" (onDbClick)="cellDbClick($event)" [config]="column" [data]="data">
+                                <td *ngFor = "#column of option.columns" style="position:relative">
+                                    <ngBsTableItem (editCommit)="onEditCommit($event);" [ng2_editable]="{editCmpType:getEditComponentType(),refData:{data:data,column:column}}" (onClick) = "cellClick($event)" (onDbClick)="cellDbClick($event)" [config]="column" [data]="data">
                                     </ngBsTableItem>
                                 </td>
                             </tr>
@@ -84,6 +86,12 @@ export class ng_bstable{
         this.pageSize = this.option.pageSize;
         this.currPage = 1;
         this.datas = v;
+    }
+    getEditComponentType(){
+        return (<Type>defaultEditComponent)
+    }
+    onEditCommit(evt){
+        evt.refData.data[evt.refData.column.field] = evt.value;
     }
     getTotalPage() {
         return Math.floor((this.datas.length + this.option.pageSize - 1) / this.option.pageSize));

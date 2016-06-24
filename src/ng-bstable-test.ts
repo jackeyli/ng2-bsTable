@@ -40,7 +40,7 @@ export class app {
             pagination:true,
             pageSize:100
         };
-        this.data = Array.from(new Array(1000),(x,i)=>i).map(item =>
+        this.data = Array.from(new Array(100),(x,i)=>i).map(item =>
             ({
                 rptOid:item,
                 rptName:'Desfadfadf',

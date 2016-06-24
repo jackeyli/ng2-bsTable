@@ -32,22 +32,22 @@ export class ng_bsTableItem{
     constructor(){}
     _onClick(evt)
     {
-        if(config.listeners['click'])
-            config.listeners['click'](evt);
-        this.onClick.emit(_getEvt());
+        if(this.config.listeners && this.config.listeners['click'])
+            this.config.listeners['click'](evt);
+        this.onClick.emit(this._getEvt());
     }
     _onDbClick(evt)
     {
-        if(config.listeners['dbclick'])
-            config.listeners['dbclick'](evt);
-        this.onDbClick.emit(_getEvt());
+        if(this.config.listeners && this.config.listeners['dbclick'])
+            this.config.listeners['dbclick'](evt);
+        this.onDbClick.emit(this._getEvt());
     }
     _getEvt()
     {
-        return <bsTableEvt>({
-            value:data[config.field],
-            row:data,
-            col:config.col
-        });
+       /* return <bsTableEvt>({
+            value:this.data[config.field],
+            row:this.data,
+            col:this.config.col
+        });*/
     }
 }
