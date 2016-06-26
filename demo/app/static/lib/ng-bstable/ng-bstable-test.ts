@@ -15,7 +15,7 @@ import {ng_bstable} from "./ng-bstable.ts";
 })
 export class app {
     constructor() {
-        this.bsOption ={
+        /*this.bsOption ={
             columns:[
                 {
                     field:'test1',
@@ -47,6 +47,41 @@ export class app {
                 test3:'BX',
                 test4:'Builder',
                 test5:'201523431' + item
-            }));
+            }));*/
+        this.data = Array.from(new Array(100),(x,i)=>i).map(
+          item=>({
+              "name": "ng-bsTable",
+              "column1": item,
+              "column2": item + 12
+          })
+        );
+        this.bsOption = {
+            columns:[
+                [{
+                    "field": "name",
+                    "title": "Name",
+                    "colspan": 1,
+                    "rowspan": 2
+                }, {
+                    "title": "GroupedColumn",
+                    "colspan": 2,
+                    "rowspan": 1
+                }],
+                [{
+                    "field": "column1",
+                    "title": "Column1",
+                    "colspan": 1,
+                    "rowspan": 1
+                }, {
+                    "field": "column2",
+                    "title": "Column2",
+                    "colspan": 1,
+                    "rowspan": 1
+                }]
+            ],
+            detailView:true,
+            pagination:true,
+            pageSize:30
+        }
     }
 }

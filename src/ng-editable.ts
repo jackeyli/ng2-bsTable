@@ -11,17 +11,19 @@ import {testEditComponent} from "./ng-editComponent.ts";
 })
 export class ng2Editable{
     @Output('editCommit')  public onEditCommit: EventEmitter<any> = new EventEmitter<any>();
-
+    @Output('beginEdit') public onEditBegin: EventEmitter<any> = new EventEmitter<any>();
     constructor(private _ngEl: ElementRef,private _containerRef: ViewContainerRef,private _loader:DynamicComponentLoader){
     }
     _onEdit($event) {
         this._loader.loadNextToLocation(this.ng2_editable.editCmpType,this._ngEl).then(function(cmp){
              //cmp.init(this._ngEl,this.ng2_editable.editCmpOption);
+            this.onEditBegin.emit({editCmp:cmp});
             cmp.instance.onCommit.subscribe(function(value){
-                this.onEditCommit.emit({value:value,refData:this.ng2_editable.refData});
+                this.onEditCommit.emit({cancelEdit:false,value:value,refData:this.ng2_editable.refData});
                 cmp.dispose();
             }.bind(this));
             cmp.instance.onCancel.subscribe(function(evt){
+                this.onEditCommit.emit({cancelEdit:true});
                 cmp.dispose();
             }.bind(this));
         }.bind(this));
