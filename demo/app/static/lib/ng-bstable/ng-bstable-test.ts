@@ -71,7 +71,8 @@ export class app {
                     "field": "column1",
                     "title": "Column1",
                     "colspan": 1,
-                    "rowspan": 1
+                    "rowspan": 1,
+                    sortable:true
                 }, {
                     "field": "column2",
                     "title": "Column2",

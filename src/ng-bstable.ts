@@ -71,11 +71,11 @@ class columingPipe{
                     <table data-toggle="table" class="table table-hover">
                         <thead>
                         <tr *ngFor="#columnRow of (option.columns|columning:'columning');#j=index">
-                            <th *ngIf="option.detailView && j==0" [attr.rowspan]="getDetailViewRowSpan(option.columns)">
+                            <th *ngIf="option.detailView && j==0" [attr.rowspan]="getDetailViewRowSpan(option.columns)" class = "tableHeader">
                                 <div class="fht-cell"></div>
                             </th>
-                            <th *ngFor="#column of columnRow" [attr.colspan]="column.colspan ? column.colspan : 1" [attr.rowspan]="column.rowspan? column.rowspan : 1">
-                                 <div [ngClass]="genHeaderClass(column,column.sortDirection)" (click)="onHeaderClick($event,column)">{{column.title}}</div><div class="fht-cell"></div>
+                            <th *ngFor="#column of columnRow"  class="fht-cell"[attr.colspan]="column.colspan ? column.colspan : 1" [attr.rowspan]="column.rowspan? column.rowspan : 1" unselectable="on">
+                                 <div [ngClass]="genHeaderClass(column,column.sortDirection)" class = "tableHeader" (click)="onHeaderClick($event,column)">{{column.title}}</div><div class="fht-cell" unselectable="on"></div>
                             </th>
                         </tr>
                         </thead>
@@ -98,7 +98,16 @@ class columingPipe{
             [currPage]="1" [totalRecords]="datas.length" >
             </ngBsTablePaging>
         </div>
-     `
+     `,
+    styles:[
+        `.tableHeader
+        {
+            -webkit-user-select:none;
+            -moz-user-select:none;
+            text-align:center
+        }
+        `
+    ]
 })
 export class ng_bstable{
     constructor(){}
@@ -163,19 +172,23 @@ export class ng_bstable{
         this.currPage = event.currPage;
     }
     onHeaderClick(event,column){
-        switch (column.sortDirection){
-            case 'asc':
-                column.sortDirection = 'desc'
-                break;
-            case 'desc':
-                column.sortDirection = 'asc'
-                break;
-            default:
-                column.sortDirection = 'asc'
+        if(column.sortable) {
+            switch (column.sortDirection) {
+                case 'asc':
+                    column.sortDirection = 'desc'
+                    break;
+                case 'desc':
+                    column.sortDirection = 'asc'
+                    break;
+                default:
+                    column.sortDirection = 'asc'
+            }
+            this._onSortChange(column.field, column.sortDirection);
         }
-        this._onSortChange(column.field,column.sortDirection);
+        event.stopPropagation();
+        event.preventDefault();
     }
-    _onSortChange(field,direction){
+    _onSortChange(field,direction,sortable){
         this.sortField = field;
         this.sortDirection = direction;
     }
