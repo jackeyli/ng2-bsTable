@@ -77,12 +77,13 @@ export class app {
                     "field": "column2",
                     "title": "Column2",
                     "colspan": 1,
-                    "rowspan": 1
+                    "rowspan": 1,
+                    filterable:true
                 }]
             ],
             detailView:true,
             pagination:true,
-            pageSize:30
+            pageSize:20
         }
     }
 }

@@ -7,12 +7,15 @@ import {bsTablePageEvent} from "./ng-bstableEvt.ts";
 import {ngBsTablePaging} from './ng-bstablePaging.ts';
 import {ng2Editable} from './ng-editable.ts';
 import {defaultEditComponent} from './ng-editComponent.ts';
+import {ng_bsTableRow} from './ng-bstableRow';
 @Pipe({
         name:"paging",
         pure : false
       })
 class pageFilter{
     transform(input,args){
+        if(!args[2])
+            return input;
         let pageSize = args[0],
             currPage = args[1],
             startIndex = pageSize * (currPage - 1),
@@ -59,11 +62,38 @@ class columingPipe{
         }
     }
 }
+@Pipe({
+    name:'filtering',
+    pure : false
+})
+class filteringPipe{
+    transform(input,arg){
+        let filteringFields = arg[0];
+        if(filteringFields == null)
+            return input;
+        let allFilters = Object.keys(filteringFields).map((item)=>({
+            key:item,
+            value:filteringFields[item]
+        });
+        return (Array.isArray(allFilters) && allFilters.length > 0 )? input.filter(function(item){
+            return allFilters.length == 1 ? (allFilters[0].value == null ? true :
+                ((''+item[allFilters[0].key]).startsWith(allFilters[0].value) ?
+                    true : false)) :  allFilters.reduce(function(filtera,filterb){
+                return (filtera.value == null ? true :
+                (('' + item[filtera.key]).startsWith(filtera.value) ?
+                        true : false)) &&
+                    (filterb.value == null ? true :
+                        (('' + item[filterb.key]).startsWith(filterb.value) ?
+                            true : false))
+            });
+        }) : input;
+    }
+}
 @Component({
     selector : "ng_bstable",
     inputs : ["option:option","data:data"],
-    directives:[ng_bsTableItem,ngBsTablePaging,ng2Editable],
-    pipes:[pageFilter,sortFilter,columingPipe],
+    directives:[ng_bsTableItem,ngBsTablePaging,ng2Editable,ng_bsTableRow],
+    pipes:[pageFilter,sortFilter,columingPipe,filteringPipe],
     template:`
         <div class="bootstrap-table">
             <div class="fixed-table-container">
@@ -75,13 +105,16 @@ class columingPipe{
                                 <div class="fht-cell"></div>
                             </th>
                             <th *ngFor="#column of columnRow"  class="fht-cell"[attr.colspan]="column.colspan ? column.colspan : 1" [attr.rowspan]="column.rowspan? column.rowspan : 1" unselectable="on">
-                                 <div [ngClass]="genHeaderClass(column,column.sortDirection)" class = "tableHeader" (click)="onHeaderClick($event,column)">{{column.title}}</div><div class="fht-cell" unselectable="on"></div>
+                                 <div [ngClass]="genHeaderClass(column,column.sortDirection)" class = "tableHeader" (click)="onHeaderClick($event,column)">{{column.title}}
+                                    <input type="text" *ngIf = "column.filterable && column.field!=null" class="form-control input-sm" style="padding-right: 24px;" (input)="onFilterInput($event,column.field)"/>
+                                 </div>
+                                 <div class="fht-cell" unselectable="on"></div>
                             </th>
                         </tr>
                         </thead>
                         <tbody>
-                            <tr [ngClass]="option.rowStyle" *ngFor="#data of (datas |paging:pageSize:currPage|sorting:sortField:sortDirection)">
-                                <td *ngIf="option.detailView">
+                            <tr  [ngBsTableRow] #v_row [initHandler]="expandRowHandler" [ngClass]="option.rowStyle" *ngFor="#data of (datas|filtering:filteringFields|paging:pageSize:currPage:option.pagination|sorting:sortField:sortDirection)">
+                                <td *ngIf="option.detailView" >
                                     <a class="detail-icon" href="javascript:"><i class="glyphicon glyphicon-plus icon-plus"></i></a>
                                 </td>
                                 <td *ngFor = "#column of (option.columns | columning : 'dataColumning')" style="position:relative">
@@ -95,7 +128,7 @@ class columingPipe{
             </div>
             <ngBsTablePaging *ngIf = "option.pagination"
             (pageSizeChange)="_onPageSizeChange($event)" (pageChange)="_onPageChange($event)" [pageSize]="option.pageSize"
-            [currPage]="1" [totalRecords]="datas.length" >
+            [currPage]="currPage" [totalRecords]="(datas|filtering:filteringFields).length" >
             </ngBsTablePaging>
         </div>
      `,
@@ -120,6 +153,14 @@ export class ng_bstable{
     getEditComponentType(){
         return (<Type>defaultEditComponent)
     }
+    onExpandRow(evt,row)
+    {
+        row.rowComponent.loadExpandedRow();
+    }
+    expandRowHandler(instance){
+        instance.option = {columns:[{field:'default',title:'-'},{field:'default',title:'-'}]};
+        instance.data = [{default:'-'}];
+    }
     beginEdit(evt) {
         if(this.editingCmp)
         {
@@ -132,6 +173,12 @@ export class ng_bstable{
             evt.refData.data[evt.refData.column.field] = evt.value;
         }
         this.editingCmp = null;
+    }
+    onFilterInput(evt,field)
+    {
+       this.filteringFields = this.filteringFields == null ? {} : this.filteringFields;
+       this.filteringFields[field] = evt.target.value;
+        this.currPage = 1;
     }
     getDetailViewRowSpan(columns){
         if(Array.isArray(columns[0]))
@@ -166,6 +213,7 @@ export class ng_bstable{
     }
     _onPageSizeChange(event){
         this.pageSize = event.size;
+        this.currPage = 1;
     }
     _onPageChange(event) {
         this.pageSize = event.size;
